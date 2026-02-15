@@ -9,11 +9,11 @@ import (
 	projectLib "github.com/taubyte/tau/tools/tau/lib/project"
 	repositoryLib "github.com/taubyte/tau/tools/tau/lib/repository"
 	"github.com/taubyte/tau/tools/tau/prompts"
-	"github.com/taubyte/tau/tools/tau/singletons/templates"
+	"github.com/taubyte/tau/tools/tau/templates"
 	"github.com/urfave/cli/v2"
 )
 
-func RepositoryInfo(ctx *cli.Context, library *structureSpec.Library, new bool) (interface{}, error) {
+func RepositoryInfo(ctx *cli.Context, library *structureSpec.Library, new bool) (any, error) {
 	if new && prompts.GetGenerateRepository(ctx) {
 		return repositoryInfoGenerate(ctx, library)
 	}
@@ -48,14 +48,17 @@ func repositoryInfoGenerate(ctx *cli.Context, library *structureSpec.Library) (*
 
 	// Skipping prompt for repository name unless set, using generated name
 	if ctx.IsSet(flags.RepositoryName.Name) {
-		repositoryName = prompts.GetOrRequireARepositoryName(ctx)
+		var err error
+		repositoryName, err = prompts.GetOrRequireARepositoryName(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	private := prompts.GetPrivate(ctx)
 
 	templateMap, err := templates.Get().Libraries()
 	if err != nil {
-		// TODO verbose
 		return nil, err
 	}
 
@@ -68,8 +71,6 @@ func repositoryInfoGenerate(ctx *cli.Context, library *structureSpec.Library) (*
 		RepositoryName: repositoryName,
 		Info: templates.TemplateInfo{
 			URL: templateUrl,
-			// TODO Update website template description style
-			// Description: library.Description,
 		},
 		Private: private,
 	}, nil

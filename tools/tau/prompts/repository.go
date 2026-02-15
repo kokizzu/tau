@@ -5,15 +5,15 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pterm/pterm"
 	"github.com/taubyte/tau/clients/http/auth/git/common"
+	authClient "github.com/taubyte/tau/tools/tau/clients/auth_client"
 	"github.com/taubyte/tau/tools/tau/flags"
+	"github.com/taubyte/tau/tools/tau/i18n/printer"
 	repositoryI18n "github.com/taubyte/tau/tools/tau/i18n/repository"
 	loginLib "github.com/taubyte/tau/tools/tau/lib/login"
 	repositoryLib "github.com/taubyte/tau/tools/tau/lib/repository"
 	"github.com/taubyte/tau/tools/tau/prompts/spinner"
-	authClient "github.com/taubyte/tau/tools/tau/singletons/auth_client"
-	"github.com/taubyte/tau/tools/tau/singletons/templates"
+	"github.com/taubyte/tau/tools/tau/templates"
 	"github.com/taubyte/tau/tools/tau/validate"
 	"github.com/urfave/cli/v2"
 )
@@ -22,7 +22,7 @@ func GetGenerateRepository(ctx *cli.Context, prev ...bool) bool {
 	return GetOrAskForBool(ctx, flags.GenerateRepo.Name, GenerateRepoPrompt, prev...)
 }
 
-func GetOrRequireARepositoryName(ctx *cli.Context, prev ...string) string {
+func GetOrRequireARepositoryName(ctx *cli.Context, prev ...string) (string, error) {
 	return validateAndRequireString(ctx, validateRequiredStringHelper{
 		field:     flags.RepositoryName.Name,
 		prompt:    RepositoryNamePrompt,
@@ -49,7 +49,7 @@ func SelectATemplate(ctx *cli.Context, templateMap map[string]templates.Template
 			}
 		}
 
-		pterm.Warning.Println(repositoryI18n.UnknownTemplate(selectedTemplate, LTemplateNames))
+		printer.Out.WarningPrintln(repositoryI18n.UnknownTemplate(selectedTemplate, LTemplateNames))
 	}
 
 	options, selector, _default := buildTemplateOptions(templateMap, prevURL...)

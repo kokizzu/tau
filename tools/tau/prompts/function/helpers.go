@@ -1,6 +1,7 @@
 package functionPrompts
 
 import (
+	"fmt"
 	"os"
 	"path"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/taubyte/tau/tools/tau/flags"
 	functionFlags "github.com/taubyte/tau/tools/tau/flags/function"
 	"github.com/taubyte/tau/tools/tau/prompts"
-	"github.com/taubyte/tau/tools/tau/singletons/templates"
+	"github.com/taubyte/tau/tools/tau/templates"
 	"github.com/urfave/cli/v2"
 )
 
@@ -66,7 +67,9 @@ func editHttp(ctx *cli.Context, function *structureSpec.Function) (err error) {
 		return
 	}
 
+	fmt.Printf("[paths trace] function/helpers.go editHttp before RequiredPaths function.Paths=%q\n", function.Paths)
 	function.Paths = prompts.RequiredPaths(ctx, function.Paths...)
+	fmt.Printf("[paths trace] function/helpers.go editHttp after RequiredPaths function.Paths=%q\n", function.Paths)
 	return
 }
 
@@ -76,14 +79,20 @@ func editP2P(ctx *cli.Context, function *structureSpec.Function) (err error) {
 		return
 	}
 
-	function.Command = GetOrRequireACommand(ctx, function.Command)
+	function.Command, err = GetOrRequireACommand(ctx, function.Command)
+	if err != nil {
+		return
+	}
 
 	function.Local = prompts.GetOrAskForLocal(ctx, function.Local)
 	return
 }
 
 func editPubSub(ctx *cli.Context, function *structureSpec.Function) (err error) {
-	function.Channel = GetOrRequireAChannel(ctx, function.Channel)
+	function.Channel, err = GetOrRequireAChannel(ctx, function.Channel)
+	if err != nil {
+		return
+	}
 	function.Local = prompts.GetOrAskForLocal(ctx, function.Local)
 	return
 }

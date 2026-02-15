@@ -15,7 +15,6 @@ func (link) Delete() common.Command {
 		&cli.Command{
 			Flags: []cli.Flag{
 				flags.Select,
-				flags.Yes,
 			},
 			Action: delete,
 		},
@@ -24,9 +23,9 @@ func (link) Delete() common.Command {
 
 func delete(ctx *cli.Context) error {
 	// If --select is set we should not check the user's currently selected application
-	checkEnv := !ctx.Bool(flags.Select.Name)
+	checkSelected := !ctx.Bool(flags.Select.Name)
 
-	application, err := applicationPrompts.GetOrSelect(ctx, checkEnv)
+	application, err := applicationPrompts.GetOrSelect(ctx, checkSelected)
 	if err != nil {
 		return err
 	}

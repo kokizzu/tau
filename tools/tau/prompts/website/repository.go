@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pterm/pterm"
 	httpClient "github.com/taubyte/tau/clients/http/auth"
 	structureSpec "github.com/taubyte/tau/pkg/specs/structure"
+	authClient "github.com/taubyte/tau/tools/tau/clients/auth_client"
 	"github.com/taubyte/tau/tools/tau/common"
 	"github.com/taubyte/tau/tools/tau/flags"
+	"github.com/taubyte/tau/tools/tau/i18n/printer"
 	projectLib "github.com/taubyte/tau/tools/tau/lib/project"
 	repositoryLib "github.com/taubyte/tau/tools/tau/lib/repository"
 	"github.com/taubyte/tau/tools/tau/prompts"
-	authClient "github.com/taubyte/tau/tools/tau/singletons/auth_client"
-	"github.com/taubyte/tau/tools/tau/singletons/templates"
+	"github.com/taubyte/tau/tools/tau/templates"
 	"github.com/urfave/cli/v2"
 )
 
-func RepositoryInfo(ctx *cli.Context, website *structureSpec.Website, new bool) (interface{}, error) {
+func RepositoryInfo(ctx *cli.Context, website *structureSpec.Website, new bool) (any, error) {
 	if new && prompts.GetGenerateRepository(ctx) {
 		return repositoryInfoGenerate(ctx, website)
 	}
@@ -90,8 +90,11 @@ func repositoryInfoGenerate(ctx *cli.Context, website *structureSpec.Website) (*
 			return nil, err
 		}
 
-		pterm.Warning.Printfln("Repository name %s is already taken", repositoryName)
-		repositoryName = prompts.GetOrRequireARepositoryName(ctx)
+		printer.Out.WarningPrintfln("Repository name %s is already taken", repositoryName)
+		repositoryName, err = prompts.GetOrRequireARepositoryName(ctx)
+		if err != nil {
+			return nil, err
+		}
 
 		taken, err = isRepositoryNameTaken(client, repositoryName)
 	}
@@ -100,7 +103,6 @@ func repositoryInfoGenerate(ctx *cli.Context, website *structureSpec.Website) (*
 
 	templateMap, err := templates.Get().Websites()
 	if err != nil {
-		// TODO verbose
 		return nil, err
 	}
 
@@ -113,8 +115,6 @@ func repositoryInfoGenerate(ctx *cli.Context, website *structureSpec.Website) (*
 		RepositoryName: repositoryName,
 		Info: templates.TemplateInfo{
 			URL: templateUrl,
-			// TODO Update website template description style
-			// Description: website.Description,
 		},
 		Private: private,
 	}, nil

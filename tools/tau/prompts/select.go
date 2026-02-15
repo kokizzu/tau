@@ -5,15 +5,33 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pterm/pterm"
+	cliPrompts "github.com/taubyte/tau/pkg/cli/prompts"
+	"github.com/taubyte/tau/tools/tau/i18n/printer"
 	promptsI18n "github.com/taubyte/tau/tools/tau/i18n/prompts"
 	"github.com/urfave/cli/v2"
 )
 
 func SelectInterface(names []string, prompt, _default string) (selectedInterface string, err error) {
 	if len(names) == 0 {
+		if UseDefaults {
+			err = RequiredInDefaultsModeError(prompt)
+			return
+		}
 		err = fmt.Errorf(SelectPromptNoOptions, prompt)
 		return
+	}
+	if UseDefaults {
+		if _default != "" {
+			for _, n := range names {
+				if n == _default {
+					return _default, nil
+				}
+			}
+		}
+		return names[0], nil
+	}
+	if cliPrompts.IsNonInteractive() {
+		return "", cliPrompts.ErrNonInteractive
 	}
 
 	selector := &survey.Select{
@@ -46,7 +64,7 @@ func SelectInterfaceField(ctx *cli.Context, options []string, field string, prom
 			}
 		}
 
-		pterm.Warning.Println(promptsI18n.InvalidType(method, options))
+		printer.Out.WarningPrintln(promptsI18n.InvalidType(method, options))
 	}
 
 	return SelectInterface(options, prompt, _default)

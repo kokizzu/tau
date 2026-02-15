@@ -18,23 +18,32 @@ func New(ctx *cli.Context) (*structureSpec.Storage, error) {
 		return nil, err
 	}
 
-	storage.Name = prompts.GetOrRequireAUniqueName(ctx, NamePrompt, taken)
+	storage.Name, err = prompts.GetOrRequireAUniqueName(ctx, NamePrompt, taken)
+	if err != nil {
+		return nil, err
+	}
 	storage.Description = prompts.GetOrAskForADescription(ctx)
 	storage.Tags = prompts.GetOrAskForTags(ctx)
 
 	storage.Regex = prompts.GetMatchRegex(ctx)
-	storage.Match = GetOrRequireAMatch(ctx)
+	storage.Match, err = GetOrRequireAMatch(ctx)
+	if err != nil {
+		return nil, err
+	}
 	storage.Public = GetPublic(ctx)
 
-	size, err := common.StringToUnits(prompts.GetSizeAndType(ctx, "", true))
+	sizeStr, err := prompts.GetSizeAndType(ctx, "", true)
 	if err != nil {
-		// TODO verbose
+		return nil, err
+	}
+	size, err := common.StringToUnits(sizeStr)
+	if err != nil {
 		return nil, err
 	}
 	storage.Size = uint64(size)
 
 	// Streaming or Object
-	storage.Type = SelectABucket(ctx)
+	storage.Type, err = SelectABucket(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -52,14 +61,13 @@ func New(ctx *cli.Context) (*structureSpec.Storage, error) {
 		return nil, err
 	}
 
-	return storage, err
+	return storage, nil
 }
 
 func newStreaming(ctx *cli.Context, storage *structureSpec.Storage) error {
 	var err error
 	storage.Ttl, err = prompts.GetOrRequireATimeout(ctx)
 	if err != nil {
-		// TODO verbose error i18n
 		return err
 	}
 

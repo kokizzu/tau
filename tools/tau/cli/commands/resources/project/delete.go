@@ -14,14 +14,13 @@ import (
 	"github.com/taubyte/tau/pkg/schema/project"
 	"github.com/taubyte/tau/pkg/schema/website"
 	"github.com/taubyte/tau/tools/tau/cli/common"
-	"github.com/taubyte/tau/tools/tau/flags"
+	authClient "github.com/taubyte/tau/tools/tau/clients/auth_client"
+	"github.com/taubyte/tau/tools/tau/config"
 	projectI18n "github.com/taubyte/tau/tools/tau/i18n/project"
 	repositoryI18n "github.com/taubyte/tau/tools/tau/i18n/repository"
 	loginLib "github.com/taubyte/tau/tools/tau/lib/login"
 	projectLib "github.com/taubyte/tau/tools/tau/lib/project"
 	"github.com/taubyte/tau/tools/tau/prompts"
-	authClient "github.com/taubyte/tau/tools/tau/singletons/auth_client"
-	"github.com/taubyte/tau/tools/tau/singletons/config"
 	"github.com/urfave/cli/v2"
 )
 
@@ -29,9 +28,6 @@ func (link) Delete() common.Command {
 	return common.Create(
 		&cli.Command{
 			Action: _delete,
-			Flags: []cli.Flag{
-				flags.Yes,
-			},
 		},
 	)
 }
@@ -94,7 +90,7 @@ func _delete(ctx *cli.Context) error {
 			return repositoryI18n.ErrorUnregisterRepositories(err)
 		}
 
-		projectI18n.RemovedProject(project.Name, profile.Network)
+		projectI18n.RemovedProject(project.Name, profile.Cloud)
 
 		repoNames = prompts.MultiSelect(ctx, prompts.MultiSelectConfig{
 			Field:   "github",
@@ -141,7 +137,10 @@ func selectDeletion(ctx *cli.Context) (*client.Project, project.Project, error) 
 		projectMap[project.Name] = project
 	}
 
-	projectName := prompts.GetOrAskForSelection(ctx, "name", "Project:", projectList)
+	projectName, err := prompts.GetOrAskForSelection(ctx, "name", "Project:", projectList)
+	if err != nil {
+		return nil, nil, err
+	}
 	project, ok := projectMap[projectName]
 	if !ok {
 		return nil, nil, i18n.ErrorDoesNotExist("project", projectName)
@@ -185,7 +184,7 @@ func resources(schema project.Project) ([]libraries.Library, []website.Website, 
 	}
 
 	for _, app := range applications {
-		libNames, _ = schema.Get().Libraries(app)
+		_, libNames = schema.Get().Libraries(app)
 		for _, name := range libNames {
 			lib, err := schema.Library(name, app)
 			if err != nil {
@@ -195,7 +194,7 @@ func resources(schema project.Project) ([]libraries.Library, []website.Website, 
 			libs = append(libs, lib)
 		}
 
-		webNames, _ = schema.Get().Websites(app)
+		_, webNames = schema.Get().Websites(app)
 		for _, name := range webNames {
 			web, err := schema.Website(name, app)
 			if err != nil {

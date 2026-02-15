@@ -16,23 +16,38 @@ func New(ctx *cli.Context) (*structureSpec.Database, error) {
 		return nil, err
 	}
 
-	database.Name = prompts.GetOrRequireAUniqueName(ctx, NamePrompt, taken)
+	database.Name, err = prompts.GetOrRequireAUniqueName(ctx, NamePrompt, taken)
+	if err != nil {
+		return nil, err
+	}
 	database.Description = prompts.GetOrAskForADescription(ctx)
 	database.Tags = prompts.GetOrAskForTags(ctx)
 
 	database.Regex = prompts.GetMatchRegex(ctx)
-	database.Match = GetOrRequireAMatch(ctx)
+	database.Match, err = GetOrRequireAMatch(ctx)
+	if err != nil {
+		return nil, err
+	}
 	database.Local = prompts.GetOrAskForLocal(ctx)
 
 	if GetEncryption(ctx) {
-		database.Key = GetOrRequireAnEncryptionKey(ctx)
+		database.Key, err = GetOrRequireAnEncryptionKey(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	database.Min, database.Max, _, _ = GetOrAskForMinMax(ctx, 0, 0, true)
-
-	database.Size, err = common.StringToUnits(prompts.GetSizeAndType(ctx, "", true))
+	database.Min, database.Max, _, _, err = GetOrAskForMinMax(ctx, 0, 0, true)
 	if err != nil {
-		// TODO verbose
+		return nil, err
+	}
+
+	sizeStr, err := prompts.GetSizeAndType(ctx, "", true)
+	if err != nil {
+		return nil, err
+	}
+	database.Size, err = common.StringToUnits(sizeStr)
+	if err != nil {
 		return nil, err
 	}
 

@@ -15,19 +15,29 @@ func Edit(ctx *cli.Context, prev *structureSpec.Storage) error {
 	prev.Tags = prompts.GetOrAskForTags(ctx, prev.Tags)
 
 	prev.Regex = prompts.GetMatchRegex(ctx, prev.Regex)
-	prev.Match = GetOrRequireAMatch(ctx, prev.Match)
+	var err error
+	prev.Match, err = GetOrRequireAMatch(ctx, prev.Match)
+	if err != nil {
+		return err
+	}
 
 	prev.Public = GetPublic(ctx, prev.Public)
 
-	size, err := common.StringToUnits(prompts.GetSizeAndType(ctx, common.UnitsToString(prev.Size), false))
+	sizeStr, err := prompts.GetSizeAndType(ctx, common.UnitsToString(prev.Size), false)
 	if err != nil {
-		// TODO verbose
+		return err
+	}
+	size, err := common.StringToUnits(sizeStr)
+	if err != nil {
 		return err
 	}
 	prev.Size = uint64(size)
 
 	// Streaming or Object
-	prev.Type = SelectABucket(ctx, prev.Type)
+	prev.Type, err = SelectABucket(ctx, prev.Type)
+	if err != nil {
+		return err
+	}
 	switch prev.Type {
 	case storageLib.BucketStreaming:
 		return editStreaming(ctx, prev)
@@ -43,7 +53,6 @@ func editStreaming(ctx *cli.Context, prev *structureSpec.Storage) error {
 	var err error
 	prev.Ttl, err = prompts.GetOrRequireATimeout(ctx, prev.Ttl)
 	if err != nil {
-		// TODO verbose error i18n
 		return err
 	}
 

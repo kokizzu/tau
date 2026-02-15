@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/pterm/pterm"
 	"github.com/taubyte/tau/tools/tau/flags"
+	"github.com/taubyte/tau/tools/tau/i18n/printer"
 	"github.com/taubyte/tau/tools/tau/prompts"
 	"github.com/urfave/cli/v2"
 )
@@ -15,9 +15,12 @@ var CommitMessage = &cli.Command{
 	Action: func(ctx *cli.Context) error {
 
 		// New
-		message := prompts.GetOrRequireACommitMessage(ctx)
+		message, err := prompts.GetOrRequireACommitMessage(ctx)
+		if err != nil {
+			return err
+		}
 
-		pterm.Success.Printfln("Got commit message: `%s`", message)
+		printer.Out.SuccessPrintfln("Got commit message: `%s`", message)
 		return nil
 	},
 }

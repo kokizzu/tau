@@ -21,11 +21,23 @@ func certificate(ctx *cli.Context, domain *structureSpec.Domain, new bool) (err 
 
 	if domain.CertType == domainFlags.CertTypeInline {
 		if new {
-			domain.CertFile = GetOrRequireACertificate(ctx, CertificateFilePrompt)
-			domain.KeyFile = GetOrRequireAKey(ctx, KeyFilePrompt)
+			domain.CertFile, err = GetOrRequireACertificate(ctx, CertificateFilePrompt)
+			if err != nil {
+				return
+			}
+			domain.KeyFile, err = GetOrRequireAKey(ctx, KeyFilePrompt)
+			if err != nil {
+				return
+			}
 		} else {
-			domain.CertFile = GetOrRequireACertificate(ctx, CertificateFilePrompt, domain.CertFile)
-			domain.KeyFile = GetOrRequireAKey(ctx, KeyFilePrompt, domain.KeyFile)
+			domain.CertFile, err = GetOrRequireACertificate(ctx, CertificateFilePrompt, domain.CertFile)
+			if err != nil {
+				return
+			}
+			domain.KeyFile, err = GetOrRequireAKey(ctx, KeyFilePrompt, domain.KeyFile)
+			if err != nil {
+				return
+			}
 		}
 
 		var (
@@ -34,7 +46,6 @@ func certificate(ctx *cli.Context, domain *structureSpec.Domain, new bool) (err 
 		)
 		cert, key, err = domainLib.ValidateCertificateKeyPairAndHostname(domain)
 		if err != nil {
-			// TODO verbose
 			return
 		}
 

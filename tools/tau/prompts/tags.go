@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pterm/pterm"
 	"github.com/taubyte/tau/tools/tau/flags"
+	"github.com/taubyte/tau/tools/tau/i18n/printer"
 	slices "github.com/taubyte/tau/utils/slices/string"
 	"github.com/urfave/cli/v2"
 )
@@ -36,25 +36,42 @@ func checkEmpty(tags []string) (empty bool) {
 	return
 }
 
+func tagsFromFlag(c *cli.Context) []string {
+	raw := cleanTags(strings.Join(c.StringSlice(flags.Tags.Name), ","))
+	if len(raw) == 0 {
+		return nil
+	}
+	var out []string
+	for _, s := range raw {
+		if s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 func RequiredTags(c *cli.Context, prev ...[]string) (ret []string) {
-	ret = c.StringSlice(flags.Tags.Name)
+	ret = tagsFromFlag(c)
 
 	var firstRun bool
 	for checkEmpty(ret) {
 		if !firstRun {
 			firstRun = true
 		} else {
-			pterm.Warning.Println(Required)
+			printer.Out.WarningPrintln(Required)
 		}
 
 		ret = askForTags(c, prev...)
+		if UseDefaults && checkEmpty(ret) {
+			break
+		}
 	}
 
 	return
 }
 
 func GetOrAskForTags(c *cli.Context, prev ...[]string) (ret []string) {
-	ret = c.StringSlice(flags.Tags.Name)
+	ret = tagsFromFlag(c)
 	if len(ret) > 0 {
 		return
 	}
@@ -63,8 +80,12 @@ func GetOrAskForTags(c *cli.Context, prev ...[]string) (ret []string) {
 }
 
 func askForTags(c *cli.Context, prev ...[]string) []string {
-	panicIfPromptNotEnabled("tags")
-
+	if UseDefaults {
+		if len(prev) == 1 {
+			return prev[0]
+		}
+		return nil
+	}
 	var val string
 
 	inp := &survey.Input{

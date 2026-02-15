@@ -14,14 +14,14 @@ import (
 // The compiler emits these during compilation, and it's up to the caller to
 // implement and process these validations.
 type NextValidation struct {
-	Key       string                 `json:"key"`       // identifier for the validation (e.g., "domain", "fqdn")
-	Value     interface{}            `json:"value"`     // the actual value to validate (can be string, int, etc.)
-	Validator string                 `json:"validator"` // validator name (e.g., "dns", "cid")
-	Context   map[string]interface{} `json:"context"`   // additional context for validation
+	Key       string         `json:"key"`       // identifier for the validation (e.g., "domain", "fqdn")
+	Value     any            `json:"value"`     // value to validate
+	Validator string         `json:"validator"` // validator name (e.g., "dns", "cid")
+	Context   map[string]any `json:"context"`   // extra context for validation
 }
 
 // NewNextValidation creates a new NextValidation instance.
-func NewNextValidation(key string, value interface{}, validator string, context map[string]interface{}) NextValidation {
+func NewNextValidation(key string, value any, validator string, context map[string]any) NextValidation {
 	return NextValidation{
 		Key:       key,
 		Value:     value,
@@ -86,6 +86,16 @@ func IsHttpMethod() Option {
 		default:
 			return errors.New("invalid http method")
 		}
+	})
+}
+
+// MinInt returns an Option that validates an Int attribute is >= min.
+func MinInt(min int) Option {
+	return Validator(func(v int) error {
+		if v < min {
+			return fmt.Errorf("value must be >= %d", min)
+		}
+		return nil
 	})
 }
 

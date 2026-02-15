@@ -6,7 +6,8 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/taubyte/tau/core/services/patrick"
 	"github.com/taubyte/tau/tools/tau/cli/common"
-	patrickClient "github.com/taubyte/tau/tools/tau/singletons/patrick_client"
+	patrickClient "github.com/taubyte/tau/tools/tau/clients/patrick_client"
+	"github.com/taubyte/tau/tools/tau/output"
 	buildsTable "github.com/taubyte/tau/tools/tau/table/builds"
 	"github.com/urfave/cli/v2"
 )
@@ -40,6 +41,10 @@ func query(ctx *cli.Context) error {
 	job, err := patrickC.Job(jobId)
 	if err != nil {
 		return err
+	}
+
+	if output.Render(job) {
+		return nil
 	}
 
 	t, err := buildsTable.ListNoRender([]*patrick.Job{job}, true)

@@ -1,11 +1,6 @@
 package prompts
 
-import (
-	"errors"
-	"fmt"
-
-	"github.com/pterm/pterm"
-)
+import "errors"
 
 // Errors
 var (
@@ -47,9 +42,9 @@ const (
 	CallPrompt             = "Entry Point:"
 	TimeoutPrompt          = "Time To Live:"
 
-	NetworkPrompts = "Network:"
-	FQDN           = "FQDN:"
-	Universe       = "Universe:"
+	CloudPrompts = "Cloud:"
+	FQDN         = "FQDN:"
+	Universe     = "Universe:"
 
 	NoDomainGeneratePrompt = "No domains found, generate one?"
 
@@ -71,27 +66,3 @@ const (
 var (
 	SelectionNone = "(none)"
 )
-
-func PanicIfPromptNotEnabled(prompt string) {
-	panicIfPromptNotEnabled(prompt)
-}
-
-func panicIfPromptNotEnabled(prompt string) {
-	if !PromptEnabled {
-		pterm.Warning.Printfln("Failed to prompt: %s", prompt)
-		panic("Prompting when prompt not enabled")
-	}
-}
-
-func panicIfPromptNotEnabledSelection(val string, prompt string, opts []string) {
-	if !PromptEnabled {
-		pterm.Warning.Printfln("%s not a valid selection %v", val, opts)
-		panic(fmt.Sprintf("Prompt with prompt disabled, %s", prompt))
-	}
-}
-
-func panicIfPromptNotEnabledError(err error) {
-	if !PromptEnabled {
-		panic(fmt.Sprintf("Prompt with prompt disabled: %s", err))
-	}
-}
